@@ -22,7 +22,6 @@ const loginReducer = (state = initialState, action) => {
 
             return {
                 ...state,
-                
                 loading: false,
                 status: true,
                 data: action.payload

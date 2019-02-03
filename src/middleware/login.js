@@ -15,7 +15,7 @@ const loginMiddleware = ({dispatch}) => (next) => (action) => {
 
                     dispatch({type: action.payload.next.SUCCESS, payload: response.data.result})
                     // console.log("Access Token : ", response.data.result.accessToken)
-                    localStorage.setItem('accessToken', response.data.result.accessToken    )
+                    localStorage.setItem('accessToken', response.data.result.accessToken)
 
                 } else { console.log("Status response NOT OK, NOT 200 !")}
             })

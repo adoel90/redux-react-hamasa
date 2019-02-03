@@ -7,11 +7,10 @@ import { withRouter } from 'react-router-dom'
 import Modal from 'react-awesome-modal';
 
 import { postUserLogin } from '../actions/login'
-import { getListUser} from '../actions/user'
+import { getListUser, postUpdateUser } from '../actions/user'
+import { getSessionAccessTokenLocalStorage } from '../actions/system-local-storage'
 import './App.css';
 
-
-//*Sementara tak menggunakan Component ! Only use in Container.
 class App extends Component {
 
   constructor(){
@@ -24,26 +23,26 @@ class App extends Component {
     this.closeModal = this.closeModal.bind(this);
     this.handleSaveEdit = this.handleSaveEdit.bind(this);
   
-
-    
     this.state = {
       userLoginActivity: false,
       visible : false,
       userSelected: {}
     }
-  }
+  };
 
   componentDidMount(){
     
-    const { getListUserDispatch } = this.props;
+    const { getListUserDispatch, getSessionAccessTokenLocalStorageDispatch,accessToken} = this.props;
     const { dataAccessTokenLocalStorage } = this.state
 
+    // getSessionAccessTokenLocalStorageDispatch();
+    /* NEXT, BUAT MANAGEMENT STATE LOCAL STORAGE ! (State ini termasuk type state UI)*/
     const sessionLocaStorage = localStorage.getItem("accessToken")
+
     if(sessionLocaStorage != null) {
       this.setState({
         ...this.state,
         userLoginActivity: true
-
       }, () => {
         console.log(this.state);
       })
@@ -55,35 +54,40 @@ class App extends Component {
     } else {
       console.log("Ga dapat data session Local Storage !!!");
     }
-
-    
-    
   };
 
-  
   componentDidUpdate(prevProps){
     
-    const { login, user } = this.props;
+    const { login, user, accessToken, getListUserDispatch} = this.props;
     
-    
-    if(prevProps.login != login){
-      
-          this.setState({
-            ...this.state,
-            userLoginActivity: true
-          }, () => {
-            console.log(this.state);
-          })
-      }
+    if(prevProps.login != login){   
 
-    if(prevProps.user != user){
-      console.log(user);
+      this.setState({
+        ...this.state,
+        userLoginActivity: true
+      }, () => {
+        console.log(this.state);
+        
+      })
+
+      // getListUserDispatch(sessionLocaStorage);
     }
 
+    if(prevProps.user != user){
 
+      const statusUpdated =  user.status ? user.status : null
+      if(statusUpdated == 200){
+        console.log("Berhasil updated");
+        getListUserDispatch(accessToken);
+        this.closeModal();
+      }
+    }
+
+    if(prevProps.accessToken != accessToken){
+      console.log(this.props)
+    }
   }
   
-
   handleInputChange = (e, data ) => {
 
     e.preventDefault();
@@ -145,15 +149,23 @@ class App extends Component {
 
   handleSaveEdit = (e) => {
 
-    const { userSelected } = this.state;
     e.preventDefault();
-    console.log(this.state.data);
-    console.log(userSelected);
-    
 
-  }
+    const { postUpdateUserDispatch } = this.props;
+    const { userSelected } = this.state;
+    const sessionLocaStorage = localStorage.getItem("accessToken")
 
+    let data = {
+      accessToken: sessionLocaStorage,
+      user_id: userSelected.id,
+      username: this.state.data.username,
+      name: this.state.data.name,
+      warehouse_id: userSelected.warehouse ? userSelected.warehouse.id : null,
+      access_id:userSelected.access ? userSelected.access.id : null
+    };
 
+    postUpdateUserDispatch(data);
+  };
 
   render() {  
     
@@ -162,7 +174,7 @@ class App extends Component {
 
     return (
       <div>
-      <div className="grid-container">
+        <div className="grid-container">
          
           <div className="grid-item">
             <h1>Hamasa Login Page </h1>
@@ -218,64 +230,63 @@ class App extends Component {
                 </tbody>
               </table>
           </div>
+            <Modal visible={this.state.visible} width="400" height="300" effect="fadeInDown" onClickAway={() => this.closeModal()}>
+            <div>
+                <h1>Edit</h1>              
+                <br />
+                <input 
+                  type="text" 
+                  name="name" 
+                  placeholder={userSelected.name} 
+                  defaultValue={userSelected.name}
+                  onChange={(e) => this.handleInputChange(e, 'data')} 
+                />
+                <label>Edit Name</label>
+                <br />
+                <br />
+
+                <input 
+                  type="text" 
+                  name="access"
+                  placeholder={userSelected.access != null ? userSelected.access.name : null} 
+                  defaultValue={userSelected.access != null ? userSelected.access.name : null} 
+                  onChange={(e) => this.handleInputChange(e, 'data')}
+                />
+                <label>Edit Access Level</label>    
+                <br />
+                <br />
+                
+                <input 
+                  type="text" 
+                  name="warehouse"
+                  placeholder={userSelected.warehouse != null ? userSelected.warehouse.name : null} 
+                  defaultValue={userSelected.warehouse != null ? userSelected.warehouse.name : null} 
+                  onChange={(e) => this.handleInputChange(e, 'data')}
+                />
+                <label>Edit Warehouse Location</label>    
+                <br />
+                <br />
+
+                <input 
+                  type="text" 
+                  name="username"
+                  placeholder={userSelected.username} 
+                  defaultValue={userSelected.username} 
+                  onChange={(e) => this.handleInputChange(e, 'data')}
+                />
+                <label>Edit Username</label>    
+                <br />
+                <br />
+                <button type="button" onClick={() => this.closeModal()}>
+                  Close
+                </button>
+
+                <button type="button" onClick={(e) => this.handleSaveEdit(e)}>
+                  Save
+                </button>
+            </div>
+          </Modal>
         </div>
-        
-        <Modal visible={this.state.visible} width="400" height="300" effect="fadeInDown" onClickAway={() => this.closeModal()}>
-          <div>
-              <h1>Edit</h1>              
-              <br />
-              <input 
-                type="text" 
-                name="name" 
-                placeholder={userSelected.name} 
-                defaultValue={userSelected.name}
-                onChange={(e) => this.handleInputChange(e, 'data')} 
-              />
-              <label>Edit Name</label>
-              <br />
-              <br />
-
-              <input 
-                type="text" 
-                name="access"
-                placeholder={userSelected.access != null ? userSelected.access.name : null} 
-                defaultValue={userSelected.access != null ? userSelected.access.name : null} 
-                onChange={(e) => this.handleInputChange(e, 'data')}
-              />
-              <label>Edit Access Level</label>    
-              <br />
-              <br />
-              
-              <input 
-                type="text" 
-                name="warehouse"
-                placeholder={userSelected.warehouse != null ? userSelected.warehouse.name : null} 
-                defaultValue={userSelected.warehouse != null ? userSelected.warehouse.name : null} 
-                onChange={(e) => this.handleInputChange(e, 'data')}
-              />
-              <label>Edit Warehouse Location</label>    
-              <br />
-              <br />
-
-              <input 
-                type="text" 
-                name="username"
-                placeholder={userSelected.username} 
-                defaultValue={userSelected.username} 
-                onChange={(e) => this.handleInputChange(e, 'data')}
-              />
-              <label>Edit Username</label>    
-              <br />
-              <br />
-              <button type="button" onClick={() => this.closeModal()}>
-                Close
-              </button>
-
-              <button type="button" onClick={(e) => this.handleSaveEdit(e)}>
-                Save
-              </button>
-          </div>
-      </Modal>
       </div>
     )
   }
@@ -283,14 +294,17 @@ class App extends Component {
 
 const mapStateToProps = (state) => ({
   login: state,
-  user: state.user.user
+  user: state.user.user,
+  accessToken: state.accessToken.data
 });
 
 const mapDispatchToProps = (dispatch) => {
 
   return {
     postUserLoginDispatch : (data) => dispatch(postUserLogin(data)),
-    getListUserDispatch : (data) => dispatch(getListUser(data))
+    getListUserDispatch : (data) => dispatch(getListUser(data)),
+    postUpdateUserDispatch: (data) => dispatch(postUpdateUser(data)),
+    getSessionAccessTokenLocalStorageDispatch: () => dispatch(getSessionAccessTokenLocalStorage())
   }
 }
 

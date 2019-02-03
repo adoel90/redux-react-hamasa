@@ -3,12 +3,17 @@ import rootReducer from '../reducers'
 import logMiddleware from '../middleware/log';
 import userMiddleware from '../middleware/user';
 import loginMiddleware from '../middleware/login';
+import localStorageMiddleware from '../middleware/system-local-storage'
 
 
 
 const configureStore = preloadedState => {
 
-  const store = createStore(rootReducer, applyMiddleware(logMiddleware, userMiddleware, loginMiddleware));
+  const store = createStore(rootReducer, applyMiddleware(
+                                          logMiddleware, 
+                                          userMiddleware, 
+                                          loginMiddleware, 
+                                          localStorageMiddleware));
 
   // const store = createStore(
   //   rootReducer,

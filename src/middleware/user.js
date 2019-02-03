@@ -1,6 +1,6 @@
 
 import axios from 'axios'
-import { API_POST_USER_REQUEST, API_GET_USER_REQUEST } from '../constants/action-types';
+import { API_POST_USER_REQUEST, API_GET_USER_REQUEST, API_POST_UPDATE_USER_REQUEST } from '../constants/action-types';
 
 
 const userMiddleware = ({ dispatch }) => (next) => (action) => {
@@ -44,6 +44,25 @@ const userMiddleware = ({ dispatch }) => (next) => (action) => {
         dispatch({type: action.payload.next.PENDING})
         
     }
+    
+    if(action.type === API_POST_UPDATE_USER_REQUEST){
+
+        axios
+            .put(action.payload.url, action.data)
+            .then(function(response){
+
+                console.log(response);
+                dispatch({type: action.payload.next.SUCCESS, payload:response.data})
+            })
+            .catch(function(error){
+                dispatch({type: action.payload.next.ERROR})
+                console.log("Error : ", error);
+            })
+        
+
+        dispatch({type : action.payload.next.PENDING})
+    }
+    
 
     next(action);
 }; 
